@@ -5,20 +5,59 @@ const listItem = document.getElementById("list");
 const form = document.getElementById("form");
 const newItemText = document.getElementById("text");
 const newItemAmount = document.getElementById("amount");
-const addBtn = document.getElementById("btn");
+const deleteBtn = document.getElementById("delete-btn");
 
-// temprary transactions to test functionality
-const dummyTransaction = [
-  { id: 1, text: "Flowers", amount: -25 },
-  { id: 2, text: "Cash", amount: 20 },
-  { id: 3, text: "Chai Latte", amount: -4 },
-  { id: 4, text: "Rent", amount: -1020 },
-  { id: 5, text: "Salary", amount: -3600 },
-  { id: 5, text: "Sale", amount: 5000 },
-];
+// // temprary transactions to test functionality
+// const dummyTransaction = [
+//   { id: 1, text: "Flowers", amount: -25 },
+//   { id: 2, text: "Cash", amount: 20 },
+//   { id: 3, text: "Chai Latte", amount: -4 },
+//   { id: 4, text: "Rent", amount: -1020 },
+//   { id: 5, text: "Salary", amount: -3600 },
+//   { id: 5, text: "Sale", amount: 5000 },
+// ];
 
 // global state for transactions as they are now testing
-let transactions = dummyTransaction;
+// let transactions = dummyTransaction;
+
+// creating the local storage. Need to use JSON to parse as it will come out as a string and we need an array
+const localStorageTransactions = JSON.parse(
+  localStorage.getItem("transactions")
+);
+
+// see if anyting is in local storage
+let transactions =
+  localStorage.getItem("transactions") !== null ? localStorageTransactions : [];
+
+// Add new transaction
+function addtransaction(e) {
+  e.preventDefault(); //since it is a submit event we have to call preventDefault on the event so it does not actually submit
+
+  // check see if the submitted transaction is empty or not on pressing submit
+  if ((text.value.trim() === "") | (amount.value.trim() === "")) {
+    alert("Please add a transaction and an amount");
+  } else {
+    //   create an object of the data like in dummytransaction above
+    const transaction = {
+      id: generateID(),
+      text: text.value,
+      amount: +amount.value,
+    };
+
+    transactions.push(transaction);
+    addTransactionDom(transaction);
+    updateValues();
+
+    updateLocalStorage();
+    text.value = "";
+    amount.value = "";
+  }
+}
+
+// Generate random ID
+function generateID() {
+  return Math.floor(Math.random() * 100000000);
+}
 
 // Function to Add transactions to the DOM
 function addTransactionDom(transaction) {
@@ -30,7 +69,9 @@ function addTransactionDom(transaction) {
   item.classList.add(transaction.amount < 0 ? "minus" : "plus");
   item.innerHTML = `${transaction.text} 
   <span>${sign}${Math.abs(transaction.amount)}
-  </span$> <button class="delete-btn">x</button>`;
+  </span$> <button class="delete-btn" onclick="removeTransaction(${
+    transaction.id
+  })">x</button>`;
   // add the transactions to the list
   list.appendChild(item);
 }
@@ -63,6 +104,21 @@ function updateValues(transaction) {
   expenseminus.innerText = `$${expense}`;
 }
 
+// Removing a transaction by ID
+function removeTransaction(id) {
+  //   remove from DOM
+  // we create a new array variable of the transaction array filtering out any id in the transaction array that are the same as the id passed into the function. then everything else is then updated, balance, expense, income having removed the transaction
+  transactions = transactions.filter((transaction) => transaction.id != id);
+  updateLocalStorage();
+
+  init();
+}
+
+// update local storage transactions
+function updateLocalStorage() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+
 // Init App - create an initalising app
 function init() {
   // list is reset to 0 and cleared
@@ -72,3 +128,5 @@ function init() {
   updateValues();
 }
 init();
+
+form.addEventListener("submit", addtransaction);
